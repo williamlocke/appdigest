@@ -1,5 +1,9 @@
+require 'rubygems'
+require 'rails'
+require 'appfigures'
+
 class Appdigest
-  attr_reader :connection
+
   def initialize(options = {})
     @appfigures = Appfigures.new( {:username => options[:username], :password => options[:password]})
   end
@@ -27,10 +31,8 @@ class Appdigest
   	  if rank.infinite? or rank.nan?
   	   rank = 0.0
   	  end
-  	  puts "\nRANK: %f" % rank
-  	  
-      hash["bayesian_ranked_" + rank_value_field] = rank
-      
+
+      hash["bayesian_ranked_" + rank_value_field] = rank      
       
       new_array.push(hash)
 	  end
@@ -38,26 +40,152 @@ class Appdigest
     return new_array
   end
 
+
   
-  def todays_revenue(sort_by = nil)
+  
+  def sales_per_app(start_date, end_date)
     
-#     sales = APPFIGURES.sales_per_app(2.days.ago, 2.days.ago)
-    sales = @appfigures.sales_per_inapp(2.days.ago, 2.days.ago)
+    sales = @appfigures.date_sales(start_date, end_date)
+    sales_data = {}
+    sales.each do |sale|
+      if sale['product_type'] == "app"
+        if sales_data[sale.product_id].nil?
+          sales_data[sale.product_id] = {}        
+        end
+        sales_data[sale.product_id]["revenue"] = sale.revenue
+        sales_data[sale.product_id]["downloads"] = sale.downloads
+        sales_data[sale.product_id]["name"] = sale.name
+      else
+        if sales_data[sale.parent_id].nil?
+          sales_data[sale.parent_id] = {}
+          sales_data[sale.parent_id]["revenue"] = 0.0
+        end
+        sales_data[sale.parent_id]["revenue"] += sale.revenue
+      end
+    end
+    
+    sales_array = []
+    sales_data.each do |product_id, data|
+      sales_array.push(
+        Hashie::Mash.new({
+          'product_id'     =>  product_id,
+          'name'     =>  data['name'],
+          'revenue'     =>  data['revenue'].to_f,
+          'downloads'     =>  data['downloads'].to_i,
+          'revenue_per_download' => data['revenue'].to_f / data['downloads'].to_i
+        })
+      )
+    end
+    return sales_array    
+  end
+  
+  
+  def sales_per_inapp(start_date, end_date)
+    
+    sales = @appfigures.date_sales(start_date, end_date)
+    
+    sales_data = {}
+    
+    
+    sales.each do |sale|
+      if sale['product_type'] == "inapp"
+        if sales_data[sale.product_id].nil?
+          sales_data[sale.product_id] = {}        
+        end
+        sales_data[sale.product_id]["revenue"] = sale.revenue
+        sales_data[sale.product_id]["downloads"] = sale.downloads
+        sales_data[sale.product_id]["name"] = sale.name
+        
+        sales_data[sale.product_id]["purchases"] = sale.downloads
+        
+        sales.each do |app_sale|
+          if app_sale.product_id == sale.parent_id
+            sales_data[sale.product_id]["downloads"] = app_sale["downloads"]
+          end
+        end
+      end
+    end
+    
+    sales_array = []
+    sales_data.each do |product_id, data|      
+      sales_array.push(
+        Hashie::Mash.new({
+          'product_id'     =>  product_id,
+          'name'     =>  data['name'],
+          'revenue'     =>  data['revenue'].to_f,
+          'downloads'     =>  data['downloads'].to_i,
+          'revenue_per_download' => data['revenue'].to_f / data['downloads'].to_i,
+          'purchases_per_download' => data['purchases'].to_f / data['downloads'].to_i
+          
+        })
+      )
+    end
+        
+    return sales_array    
+  end
+  
+  def total_sales(start_date, end_date)
+    sales_data = {"revenue"=>0.0, "downloads"=>0}
+    
+    sales = self.sales_per_app(start_date, end_date)
+    sales.each do |sale|
+      sales_data["revenue"] += sale.revenue
+      sales_data["downloads"] += sale.downloads
+    end
+        
+    return Hashie::Mash.new({
+        'revenue'      => sales_data["revenue"].to_f,
+        'downloads'       => sales_data['downloads'].to_i
+      })
+  end
+  
+  
+  def revenue(from_date, to_date, type = nil, sort_by = nil)
+    from_date = 2.days.ago
+    to_date = 2.days.ago
+    
+    
+    if type == "inapp"
+      sales = self.sales_per_inapp(from_date, to_date)      
+    elsif type == "total"
+      return self.total_sales(from_date, to_date)
+    else
+      sales = self.sales_per_app(from_date, to_date)
+    end
+    
+    
+    if type == "inapp"
+      sales = Appdigest.bayesian_rank(sales, "purchases_per_download", "downloads")
+    end
+    
     
     sales = Appdigest.bayesian_rank(sales, "revenue_per_download", "downloads")
     
 	  descending = -1
-    sorted_sales = sales.sort_by { |k, v| k["revenue_per_download"] * descending  }
-    sorted_sales = sales.sort_by { |k, v| k["revenue"] * descending  }
-    sorted_sales = sales.sort_by { |k, v| k["bayesian_ranked_revenue_per_download"] * descending  }
     
-    sales_array = []
-    sales.each do |sale|
-      
+    if sort_by
+      sorted_sales = sales.sort_by { |k, v| k[sort_by] * descending  }
+    else
+      sorted_sales = sales.sort_by { |k, v| k["bayesian_ranked_revenue_per_download"] * descending  }
     end
     
     return sorted_sales
   end
+
+  
+  def yesterdays_revenue(type = nil, sort_by = nil)
+    from_date = 2.days.ago
+    to_date = 2.days.ago
+    
+    return self.revenue(from_date, to_date, type, sort_by)
+  end
+  
+  
+
+  
+  
+  
+  
   
   
 end
