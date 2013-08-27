@@ -43,24 +43,57 @@ class Appdigest
 
   
   
-  def sales_per_app(start_date, end_date)
+  def sales_per_app(start_date, end_date, date_range = nil)
     
     sales = @appfigures.date_sales(start_date, end_date)
     sales_data = {}
-    sales.each do |sale|
-      if sale['product_type'] == "app"
-        if sales_data[sale.product_id].nil?
-          sales_data[sale.product_id] = {}        
+    
+    sales.each do |sales_by_day|
+      
+      sales_by_day.each do |sale|
+        
+        if sale['product_type'] == "app"  
+          if sales_data[sale.product_id].nil?
+            sales_data[sale.product_id] = {}   
+            sales_data[sale.product_id]["revenue"] = 0.0     
+            sales_data[sale.product_id]["downloads"] = 0
+            sales_data[sale.product_id]["start_date"] = sale.date
+          end
+          
+          puts "\n"
+          puts (sale.date - sales_data[sale.product_id]["start_date"]).to_i
+          puts "\n"
+          puts (date_range.to_i / 86400)
+          puts "\n"
+                    
+          if date_range and (sale.date - sales_data[sale.product_id]["start_date"]).to_i > (date_range.to_i / 86400)
+            puts "not adding data for this date"
+            if sales_data[sale.product_id]["end_date"].nil?
+              sales_data[sale.product_id]["end_date"] = sale.date - 1.day
+            end
+            next
+          end
+          
+          sales_data[sale.product_id]["revenue"] += sale.revenue
+          sales_data[sale.product_id]["downloads"] += sale.downloads
+          sales_data[sale.product_id]["name"] = sale.name
+        else
+          if sales_data[sale.parent_id].nil?
+            sales_data[sale.parent_id] = {}
+            sales_data[sale.parent_id]["revenue"] = 0.0
+            sales_data[sale.parent_id]["downloads"] = 0
+            sales_data[sale.parent_id]["start_date"] = sale.date
+          end
+          
+          if date_range and (sale.date - sales_data[sale.parent_id]["start_date"]).to_i > (date_range.to_i / 86400)
+            if sales_data[sale.parent_id]["end_date"].nil?
+              sales_data[sale.parent_id]["end_date"] = sale.date - 1.day
+            end
+            next
+          end
+          
+          sales_data[sale.parent_id]["revenue"] += sale.revenue
         end
-        sales_data[sale.product_id]["revenue"] = sale.revenue
-        sales_data[sale.product_id]["downloads"] = sale.downloads
-        sales_data[sale.product_id]["name"] = sale.name
-      else
-        if sales_data[sale.parent_id].nil?
-          sales_data[sale.parent_id] = {}
-          sales_data[sale.parent_id]["revenue"] = 0.0
-        end
-        sales_data[sale.parent_id]["revenue"] += sale.revenue
       end
     end
     
@@ -70,6 +103,8 @@ class Appdigest
         Hashie::Mash.new({
           'product_id'     =>  product_id,
           'name'     =>  data['name'],
+          'start_date'     =>  data['start_date'],
+          'end_date'     =>  data['end_date'],
           'revenue'     =>  data['revenue'].to_f,
           'downloads'     =>  data['downloads'].to_i,
           'revenue_per_download' => data['revenue'].to_f / data['downloads'].to_i
@@ -80,12 +115,11 @@ class Appdigest
   end
   
   
-  def sales_per_inapp(start_date, end_date)
+  def sales_per_inapp(start_date, end_date, date_range = nil)
     
     sales = @appfigures.date_sales(start_date, end_date)
     
     sales_data = {}
-    
     
     sales.each do |sale|
       if sale['product_type'] == "inapp"
@@ -116,7 +150,6 @@ class Appdigest
           'downloads'     =>  data['downloads'].to_i,
           'revenue_per_download' => data['revenue'].to_f / data['downloads'].to_i,
           'purchases_per_download' => data['purchases'].to_f / data['downloads'].to_i
-          
         })
       )
     end
@@ -140,17 +173,16 @@ class Appdigest
   end
   
   
-  def revenue(from_date, to_date, type = nil, sort_by = nil)
-    from_date = 2.days.ago
-    to_date = 2.days.ago
-    
-    
+  def revenue(from_date, to_date, type = nil, sort_by = nil, date_range = nil)
+        
     if type == "inapp"
-      sales = self.sales_per_inapp(from_date, to_date)      
+      sales = self.sales_per_inapp(from_date, to_date, date_range)
     elsif type == "total"
       return self.total_sales(from_date, to_date)
+    elsif type == "app" or type == nil
+      sales = self.sales_per_app(from_date, to_date, date_range)
     else
-      sales = self.sales_per_app(from_date, to_date)
+      raise Exception.new("Unknown type: %s. Select 'inapp', 'app', or 'total'" % type)
     end
     
     
@@ -180,11 +212,36 @@ class Appdigest
     return self.revenue(from_date, to_date, type, sort_by)
   end
   
+  def last_weeks_revenue(type = nil, sort_by = nil)
+    from_date = 9.days.ago
+    to_date = 2.days.ago
+    
+    return self.revenue(from_date, to_date, type, sort_by)
+  end
   
-
+  def all_time_revenue(type = nil, sort_by = nil)
+    from_date = 1000.days.ago
+    to_date = 2.days.ago
+    return self.revenue(from_date, to_date, type, sort_by)
+  end
   
+  def first_months_revenue(type = nil, sort_by = nil)
+    from_date = 1000.days.ago
+    to_date = 2.days.ago
+    return self.revenue(from_date, to_date, type, sort_by, 30.days)
+  end
   
+  def first_weeks_revenue(type = nil, sort_by = nil)
+    from_date = 1000.days.ago
+    to_date = 2.days.ago
+    return self.revenue(from_date, to_date, type, sort_by, 7.days)
+  end
   
+  def first_days_revenue(type = nil, sort_by = nil)
+    from_date = 1000.days.ago
+    to_date = 2.days.ago
+    return self.revenue(from_date, to_date, type, sort_by, 1.days)
+  end
   
   
   
