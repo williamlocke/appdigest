@@ -3,6 +3,10 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
+gem "appfigures", :path => "~/code/gems/appfigures"
+gem "rails"
+
+
 # Add dependencies to develop your gem here.
 # Include everything needed to run rake, tests, features, etc.
 group :development do
@@ -12,6 +16,5 @@ group :development do
   gem "jeweler", "~> 1.8.7"
 #  gem "rcov", ">= 0"
   gem "simplecov", ">= 0"
-  gem "appfigures", :path => "~/code/gems/appfigures"
   
 end
