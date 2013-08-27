@@ -121,21 +121,23 @@ class Appdigest
     
     sales_data = {}
     
-    sales.each do |sale|
-      if sale['product_type'] == "inapp"
-        if sales_data[sale.product_id].nil?
-          sales_data[sale.product_id] = {}        
-        end
-        sales_data[sale.product_id]["revenue"] = sale.revenue
-        sales_data[sale.product_id]["downloads"] = sale.downloads
-        sales_data[sale.product_id]["name"] = sale.name
-        
-        sales_data[sale.product_id]["purchases"] = sale.downloads
-        
-        sales.each do |app_sale|
-          if app_sale.product_id == sale.parent_id
-            sales_data[sale.product_id]["downloads"] = app_sale["downloads"]
+    sales.each do |sales_by_day|
+      sales_by_day.each do |sale|
+        if sale['product_type'] == "inapp"
+          if sales_data[sale.product_id].nil?
+            sales_data[sale.product_id] = {}        
           end
+          sales_data[sale.product_id]["revenue"] = sale.revenue
+          sales_data[sale.product_id]["downloads"] = sale.downloads
+          sales_data[sale.product_id]["name"] = sale.name
+          
+          sales_data[sale.product_id]["purchases"] = sale.downloads
+          
+          sales.each do |app_sale|
+            if app_sale.product_id == sale.parent_id
+              sales_data[sale.product_id]["downloads"] = app_sale["downloads"]
+            end
+          end        
         end
       end
     end
@@ -240,7 +242,7 @@ class Appdigest
   def first_days_revenue(type = nil, sort_by = nil)
     from_date = 1000.days.ago
     to_date = 2.days.ago
-    return self.revenue(from_date, to_date, type, sort_by, 1.days)
+    return self.revenue(from_date, to_date, type, sort_by, 2.days)
   end
   
   
