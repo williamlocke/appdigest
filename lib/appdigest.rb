@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'rails'
 require 'appfigures'
+require 'active_support/all'
 
 class Appdigest
 
@@ -39,8 +40,6 @@ class Appdigest
 	  
     return new_array
   end
-
-
   
   
   def sales_per_app(start_date, end_date, date_range = nil)
@@ -49,9 +48,7 @@ class Appdigest
     sales_data = {}
     
     sales.each do |sales_by_day|
-      
-      sales_by_day.each do |sale|
-        
+      sales_by_day.each do |sale|        
         if sale['product_type'] == "app"  
           if sales_data[sale.product_id].nil?
             sales_data[sale.product_id] = {}   
@@ -59,15 +56,8 @@ class Appdigest
             sales_data[sale.product_id]["downloads"] = 0
             sales_data[sale.product_id]["start_date"] = sale.date
           end
-          
-          puts "\n"
-          puts (sale.date - sales_data[sale.product_id]["start_date"]).to_i
-          puts "\n"
-          puts (date_range.to_i / 86400)
-          puts "\n"
-                    
+
           if date_range and (sale.date - sales_data[sale.product_id]["start_date"]).to_i > (date_range.to_i / 86400)
-            puts "not adding data for this date"
             if sales_data[sale.product_id]["end_date"].nil?
               sales_data[sale.product_id]["end_date"] = sale.date - 1.day
             end
@@ -125,19 +115,24 @@ class Appdigest
       sales_by_day.each do |sale|
         if sale['product_type'] == "inapp"
           if sales_data[sale.product_id].nil?
-            sales_data[sale.product_id] = {}        
+            sales_data[sale.product_id] = {}   
+            sales_data[sale.product_id]["revenue"] = 0.0
+            sales_data[sale.product_id]["downloads"] = 0
+            sales_data[sale.product_id]["purchases"] = 0
           end
-          sales_data[sale.product_id]["revenue"] = sale.revenue
-          sales_data[sale.product_id]["downloads"] = sale.downloads
+          sales_data[sale.product_id]["revenue"] += sale.revenue
           sales_data[sale.product_id]["name"] = sale.name
           
-          sales_data[sale.product_id]["purchases"] = sale.downloads
+          sales_data[sale.product_id]["purchases"] += sale.downloads
           
-          sales.each do |app_sale|
-            if app_sale.product_id == sale.parent_id
-              sales_data[sale.product_id]["downloads"] = app_sale["downloads"]
-            end
-          end        
+          sales_data[sale.product_id]["downloads"] = 0
+          sales.each do |app_sales_by_day|
+            app_sales_by_day.each do |app_sale|            
+              if app_sale.product_id == sale.parent_id
+                sales_data[sale.product_id]["downloads"] += app_sale["downloads"]
+              end
+            end            
+          end      
         end
       end
     end
@@ -208,15 +203,22 @@ class Appdigest
 
   
   def yesterdays_revenue(type = nil, sort_by = nil)
-    from_date = 2.days.ago
-    to_date = 2.days.ago
+    from_date = 1.days.ago
+    to_date = 1.days.ago
     
     return self.revenue(from_date, to_date, type, sort_by)
   end
   
   def last_weeks_revenue(type = nil, sort_by = nil)
-    from_date = 9.days.ago
-    to_date = 2.days.ago
+    from_date = 8.days.ago
+    to_date = 1.days.ago
+    
+    return self.revenue(from_date, to_date, type, sort_by)
+  end
+  
+  def last_months_revenue(type = nil, sort_by = nil)
+    from_date = 31.days.ago
+    to_date = 1.days.ago
     
     return self.revenue(from_date, to_date, type, sort_by)
   end
@@ -242,7 +244,27 @@ class Appdigest
   def first_days_revenue(type = nil, sort_by = nil)
     from_date = 1000.days.ago
     to_date = 2.days.ago
-    return self.revenue(from_date, to_date, type, sort_by, 2.days)
+    return self.revenue(from_date, to_date, type, sort_by, 1.days)
+  end
+  
+  
+  def new_releases(min_release_date = nil)
+    if min_release_date.nil?
+      min_release_date = 31.days.ago
+    end
+    
+    sales = self.sales_per_app(36.days.ago, 1.day.ago, nil)
+    newly_released_apps = []
+    
+    sales.each do |sale|
+      if sale.start_date > min_release_date.to_date
+        newly_released_apps.push(sale)
+      end
+    end
+    
+    sales = Appdigest.bayesian_rank(sales, "revenue_per_download", "downloads")
+    
+    return newly_released_apps
   end
   
   
