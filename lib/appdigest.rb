@@ -127,14 +127,16 @@ class Appdigest
           
           sales_data[sale.product_id]["purchases"] += sale.downloads
           
-          sales_data[sale.product_id]["downloads"] = 0
-          sales.each do |app_sales_by_day|
-            app_sales_by_day.each do |app_sale|            
-              if app_sale.product_id == sale.parent_id
-                sales_data[sale.product_id]["downloads"] += app_sale["downloads"]
-              end
-            end            
-          end      
+#           sales_data[sale.product_id]["downloads"] = 0
+          if sales_data[sale.product_id]["downloads"] <= 0
+            sales.each do |app_sales_by_day|
+              app_sales_by_day.each do |app_sale|            
+                if app_sale.product_id == sale.parent_id
+                  sales_data[sale.product_id]["downloads"] += app_sale["downloads"]
+                end
+              end            
+            end      
+          end
         end
       end
     end
