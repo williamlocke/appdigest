@@ -9,6 +9,8 @@ class Appdigest
     @appfigures = Appfigures.new( {:username => options[:username], :password => options[:password]})
   end
   
+  TIME_ZONE = "America/Los_Angeles"
+  
   
   def self.bayesian_rank(array, rank_value_field, rank_count_field)
 		sum_of_rank_count_fields = 0
@@ -203,57 +205,57 @@ class Appdigest
 
   
   def yesterdays_revenue(type = nil, sort_by = nil)
-    from_date = 1.days.ago
-    to_date = 1.days.ago
+    from_date = 1.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 1.days.ago.in_time_zone(TIME_ZONE)
     
     return self.revenue(from_date, to_date, type, sort_by)
   end
   
   def last_weeks_revenue(type = nil, sort_by = nil)
-    from_date = 8.days.ago
-    to_date = 1.days.ago
+    from_date = 8.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 1.days.ago.in_time_zone(TIME_ZONE)
     
     return self.revenue(from_date, to_date, type, sort_by)
   end
   
   def last_months_revenue(type = nil, sort_by = nil)
-    from_date = 31.days.ago
-    to_date = 1.days.ago
+    from_date = 31.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 1.days.ago.in_time_zone(TIME_ZONE)
     
     return self.revenue(from_date, to_date, type, sort_by)
   end
   
   def all_time_revenue(type = nil, sort_by = nil)
-    from_date = 1000.days.ago
-    to_date = 2.days.ago
+    from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 2.days.ago.in_time_zone(TIME_ZONE)
     return self.revenue(from_date, to_date, type, sort_by)
   end
   
   def first_months_revenue(type = nil, sort_by = nil)
-    from_date = 1000.days.ago
-    to_date = 2.days.ago
+    from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 2.days.ago.in_time_zone(TIME_ZONE)
     return self.revenue(from_date, to_date, type, sort_by, 30.days)
   end
   
   def first_weeks_revenue(type = nil, sort_by = nil)
-    from_date = 1000.days.ago
-    to_date = 2.days.ago
+    from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 2.days.ago.in_time_zone(TIME_ZONE)
     return self.revenue(from_date, to_date, type, sort_by, 7.days)
   end
   
   def first_days_revenue(type = nil, sort_by = nil)
-    from_date = 1000.days.ago
-    to_date = 2.days.ago
+    from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 2.days.ago.in_time_zone(TIME_ZONE)
     return self.revenue(from_date, to_date, type, sort_by, 1.days)
   end
   
   
   def new_releases(min_release_date = nil)
     if min_release_date.nil?
-      min_release_date = 31.days.ago
+      min_release_date = 31.days.ago.in_time_zone(TIME_ZONE)
     end
     
-    sales = self.sales_per_app(36.days.ago, 1.day.ago, nil)
+    sales = self.sales_per_app(36.days.ago.in_time_zone(TIME_ZONE), 1.day.ago.in_time_zone(TIME_ZONE), nil)
     newly_released_apps = []
     
     sales.each do |sale|
