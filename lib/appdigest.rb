@@ -227,25 +227,25 @@ class Appdigest
   
   def all_time_revenue(type = nil, sort_by = nil)
     from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
-    to_date = 2.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 1.days.ago.in_time_zone(TIME_ZONE)
     return self.revenue(from_date, to_date, type, sort_by)
   end
   
   def first_months_revenue(type = nil, sort_by = nil)
     from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
-    to_date = 2.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 1.days.ago.in_time_zone(TIME_ZONE)
     return self.revenue(from_date, to_date, type, sort_by, 30.days)
   end
   
   def first_weeks_revenue(type = nil, sort_by = nil)
     from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
-    to_date = 2.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 1.days.ago.in_time_zone(TIME_ZONE)
     return self.revenue(from_date, to_date, type, sort_by, 7.days)
   end
   
   def first_days_revenue(type = nil, sort_by = nil)
     from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
-    to_date = 2.days.ago.in_time_zone(TIME_ZONE)
+    to_date = 1.days.ago.in_time_zone(TIME_ZONE)
     return self.revenue(from_date, to_date, type, sort_by, 1.days)
   end
   
