@@ -1,9 +1,38 @@
-= appdigest
+Appdigest
+=========
 
-Description goes here.
+Purchase analytics using AppFigures API.
 
-== Contributing to appdigest
- 
+
+Installation
+------------
+
+~~~ sh
+$ git clone git@github.com:williamlocke/appdigest.git
+$ cd appdigest
+$ sudo rake install
+~~~
+
+Set environmental variables for appfigures:
+~~~ sh
+export APPFIGURES_USERNAME=user@example.com
+export APPFIGURES_PASSWORD=password
+~~~
+
+
+Usage
+-----
+
+Searches and provides totals/averages for in-app purchases that contain given keywords (csv)
+~~~ sh
+$ appdigest search_inapps characters,patients,babies
+~~~
+
+
+
+
+Contributing to appdigest
+-------------------------
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
 * Fork the project.
