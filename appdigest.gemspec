@@ -5,13 +5,14 @@
 
 Gem::Specification.new do |s|
   s.name = "appdigest"
-  s.version = "0.1.3"
+  s.version = "0.1.4"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["williamlocke"]
-  s.date = "2013-08-27"
-  s.description = "Provides revenue statistics using appfigures"
+  s.date = "2013-09-04"
+  s.description = "Provides revenue statistics using appfigures API"
   s.email = "williamlocke@me.com"
+  s.executables = ["appdigest"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc"
@@ -41,6 +42,8 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<appfigures>, [">= 0"])
       s.add_runtime_dependency(%q<rails>, ["~> 3.2"])
+      s.add_runtime_dependency(%q<thor>, [">= 0"])
+      s.add_runtime_dependency(%q<table_print>, [">= 0"])
       s.add_development_dependency(%q<shoulda>, [">= 0"])
       s.add_development_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0"])
@@ -49,6 +52,8 @@ Gem::Specification.new do |s|
     else
       s.add_dependency(%q<appfigures>, [">= 0"])
       s.add_dependency(%q<rails>, ["~> 3.2"])
+      s.add_dependency(%q<thor>, [">= 0"])
+      s.add_dependency(%q<table_print>, [">= 0"])
       s.add_dependency(%q<shoulda>, [">= 0"])
       s.add_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_dependency(%q<bundler>, ["~> 1.0"])
@@ -58,6 +63,8 @@ Gem::Specification.new do |s|
   else
     s.add_dependency(%q<appfigures>, [">= 0"])
     s.add_dependency(%q<rails>, ["~> 3.2"])
+    s.add_dependency(%q<thor>, [">= 0"])
+    s.add_dependency(%q<table_print>, [">= 0"])
     s.add_dependency(%q<shoulda>, [">= 0"])
     s.add_dependency(%q<rdoc>, ["~> 3.12"])
     s.add_dependency(%q<bundler>, ["~> 1.0"])

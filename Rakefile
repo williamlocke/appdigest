@@ -18,9 +18,10 @@ Jeweler::Tasks.new do |gem|
   gem.homepage = "http://github.com/williamlocke/appdigest"
   gem.license = "MIT"
   gem.summary = %Q{Provides revenue statistics using appfigures}
-  gem.description = %Q{Provides revenue statistics using appfigures}
+  gem.description = %Q{Provides revenue statistics using appfigures API}
   gem.email = "williamlocke@me.com"
   gem.authors = ["williamlocke"]
+  gem.executables = ["appdigest"]
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
