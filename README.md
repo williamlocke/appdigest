@@ -23,7 +23,7 @@ export APPFIGURES_PASSWORD=password
 Usage
 -----
 
-Searches and provides totals/averages for in-app purchases that contain given keywords (csv)
+Search and provide totals/averages for in-app purchases that contain given keywords (csv)
 ~~~ sh
 $ appdigest search characters,patients,babies
 ~~~
