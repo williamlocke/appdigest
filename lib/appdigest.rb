@@ -12,12 +12,31 @@ include ActionView::Helpers::NumberHelper
 module Appdigest
   class CLI < Thor
     
+    def appdigest(options)
+	    appdigest = nil
+	    if options[:username] and options[:password]
+	      appdigest = Appdigest.new username: options[:username], password: options[:password]
+	    elsif ENV['APPFIGURES_USERNAME'] and ENV['APPFIGURES_PASSWORD']
+	      appdigest = Appdigest.new username: ENV['APPFIGURES_USERNAME'], password: ENV['APPFIGURES_PASSWORD']
+	    else
+	     puts "ERROR: appfigures username/password not provides (-u name@example.com -p password)"
+	    end
+	    
+	    return appdigest
+      
+    end
+    
 		desc "search_inapps KEYWORDS_CSV", "Returns revenue history for in-app purchases whose names contain any of given keywords (keywords should be a csv e.g. 'character,patient'"
 	  method_option :verbose, :aliases => "-v", :desc => "Be verbose"
 	  method_option :sort_by, :desc => "Column to sort values by"
+	  method_option :username, :alias => "-u", :desc => "Your appfigures username"
+	  method_option :password, :alias => "-p", :desc => "Your appfigures password"
 	  def search_inapps(keywords_csv)
 	    puts "Give details" if options[:verbose]
-	    appdigest = Appdigest.new username: ENV['APPFIGURES_USERNAME'], password: ENV['APPFIGURES_PASSWORD']
+	    appdigest = self.appdigest(options)
+	    if not appdigest
+	      return
+	    end
 	    
 	    sales = appdigest.search_inapps(keywords_csv, options)
 	    puts "\n"
