@@ -25,20 +25,42 @@ Usage
 
 Searches and provides totals/averages for in-app purchases that contain given keywords (csv)
 ~~~ sh
-$ appdigest search_inapps characters,patients,babies
+$ appdigest search characters,patients,babies
 ~~~
-
 
 Compare app performance firt week
 ~~~ sh
-$ appdigest search * --type app --week
+$ appdigest search "*" --type app --week
 ~~~
 
-Compare in-app performance first week
+Compare app performance firt 3 days
 ~~~ sh
-$ appdigest search * --type app --week
+$ appdigest search "*" --type app --days 3
 ~~~
 
+View recent revenue (past weeks)
+~~~ sh
+$ appdigest recent --week
+~~~
+
+View recent revenue (past 3 days)
+~~~ sh
+$ appdigest recent --days 3
+~~~
+
+
+Help
+----
+
+View available commands
+~~~ sh
+$ appdigest 
+~~~
+
+View available options for a particular command
+~~~ sh
+$ appdigest help search
+~~~
 
 
 
