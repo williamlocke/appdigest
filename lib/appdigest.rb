@@ -12,50 +12,65 @@ include ActionView::Helpers::NumberHelper
 module Appdigest
   class CLI < Thor
     
-    def appdigest(options)
-	    appdigest = nil
-	    if options[:username] and options[:password]
-	      appdigest = Appdigest.new username: options[:username], password: options[:password]
-	    elsif ENV['APPFIGURES_USERNAME'] and ENV['APPFIGURES_PASSWORD']
-	      appdigest = Appdigest.new username: ENV['APPFIGURES_USERNAME'], password: ENV['APPFIGURES_PASSWORD']
-	    else
-	     puts "ERROR: appfigures username/password not provides (-u name@example.com -p password)"
-	    end
-	    
-	    return appdigest
-      
-    end
     
-		desc "search_inapps KEYWORDS_CSV", "Returns revenue history for in-app purchases whose names contain any of given keywords (keywords should be a csv e.g. 'character,patient'"
+		desc "search KEYWORDS_CSV", "Returns history (and totals) for in-app or apps whose names contain any of given keywords (keywords should be a csv e.g. 'character,patient'"
 	  method_option :verbose, :aliases => "-v", :desc => "Be verbose"
-	  method_option :sort_by, :desc => "Column to sort values by"
+	  method_option :sort_by, :desc => "Column to sort values by (defaults to revenue_per_download)"
 	  method_option :username, :alias => "-u", :desc => "Your appfigures username"
 	  method_option :password, :alias => "-p", :desc => "Your appfigures password"
-	  def search_inapps(keywords_csv)
-	    puts "Give details" if options[:verbose]
-	    appdigest = self.appdigest(options)
-	    if not appdigest
-	      return
-	    end
-	    
-	    sales = appdigest.search_inapps(keywords_csv, options)
+	  method_option :type, :desc => "The type of data to return. E.g. --type inapp , --type app. (defaults to --type inapp)"
+	  method_option :days, :desc => "The first x days of apps release to return data for. E.g. --days 3 returns first 3 days"
+	  method_option :week, :desc => "Shows data for first week of apps release"
+	  method_option :month, :desc => "Shows data for first month of apps release"
+	  method_option :year, :desc => "Shows data for first year of apps release"
+	  def search(keywords_csv)
+	    appdigest = Appdigest.new options
+	    sales = appdigest.search(keywords_csv, options)
 	    puts "\n"
 	    tp sales, :index, {:name => {:width => 100}}, :downloads, :revenue, :revenue_per_download, :purchases_per_download
-	    
-	    
 	  end
+	  
+		desc "recent", "Returns recent days app or in-app history for a specified period (defaults to week)"
+	  method_option :verbose, :aliases => "-v", :desc => "Be verbose"
+	  method_option :keywords, :desc => "Only show app or in-apps whose name contains one of given keywords (use a CSV e.g 'makeover,makeup'"
+	  method_option :sort_by, :desc => "Column to sort values by (defaults to revenue_per_download)"
+	  method_option :username, :alias => "-u", :desc => "Your appfigures username"
+	  method_option :password, :alias => "-p", :desc => "Your appfigures password"
+	  method_option :type, :desc => "The type of data to return. E.g. --type inapp , --type app. (defaults to --type app)"
+	  method_option :days, :desc => "The first x days of apps release to return data for. E.g. --days 3 returns first 3 days"
+	  method_option :week, :desc => "Shows data for first week of apps release"
+	  method_option :month, :desc => "Shows data for first month of apps release"
+	  method_option :year, :desc => "Shows data for first year of apps release"
+	  def recent()
+	    appdigest = Appdigest.new options
+	    sales = appdigest.recent(options)
+	    puts "\n"
+	    tp sales, :index, {:name => {:width => 100}}, :downloads, :revenue, :revenue_per_download, :purchases_per_download
+	  end
+
+
   end
 
   class Appdigest
     # @todo: make caching optional
   
     TIME_ZONE = "America/Los_Angeles"
-    CACHE_PATH = "/tmp/cache/appdigest/"
+    CACHE_PATH = File::SEPARATOR + ["tmp", "cache", "appdigest"].join(File::SEPARATOR)
     FILE_STORE = ActiveSupport::Cache::FileStore.new(CACHE_PATH)
+    EARLIEST_POSSIBLE_APP_STORE_DATE = Time.new(2008,1,1)
     
     def initialize(options = {})
-      @appfigures = Appfigures.new( {:username => options[:username], :password => options[:password]})
+	    if options[:username] and options[:password]
+	      @appfigures = Appfigures.new( {:username => options[:username], :password => options[:password]})
+	    elsif ENV['APPFIGURES_USERNAME'] and ENV['APPFIGURES_PASSWORD']
+	      @appfigures = Appfigures.new( {:username => ENV['APPFIGURES_USERNAME'], :password => ENV['APPFIGURES_PASSWORD']})
+	    else
+	      puts "ERROR: appfigures username/password not provides (-u name@example.com -p password)"
+	    end
+    
+#       @appfigures = Appfigures.new( {:username => options[:username], :password => options[:password]})
     end
+    
     
    
     def self.bayesian_rank(array, rank_value_field, rank_count_field)
@@ -172,7 +187,7 @@ module Appdigest
         puts "sales object pulled from cache for url: %s" % url
       end
       
-      function_key = __method__.to_s + url
+      function_key = __method__.to_s + url + "&date_range=" + (date_range.nil? ? "" : date_range.to_s)
       sales_array = FILE_STORE.read(function_key)
       if not sales_array.nil?
         puts "DEBUG: sales_data found in cache."
@@ -366,7 +381,6 @@ module Appdigest
           sale['bayesian_ranked_revenue_per_download'] = number_with_precision(sale['bayesian_ranked_revenue_per_download'].to_f.infinite? ? 0 : (sale['bayesian_ranked_revenue_per_download'] * 100), :precision => 2)
         end
         
-        
         sale['downloads'] = number_with_delimiter(sale['downloads'], :delimiter => ",")
         sale['revenue'] =  number_to_currency(sale['revenue'])
         
@@ -377,10 +391,10 @@ module Appdigest
         if not sale['bayesian_ranked_purchases_per_download'].nil?
           sale['bayesian_ranked_purchases_per_download'] = number_with_precision(sale['bayesian_ranked_purchases_per_download'].to_f.infinite? ? 0 : (sale['bayesian_ranked_purchases_per_download'] * 100), :precision => 2)
         end
-            
-        sale['name'] = sale['name'].gsub("com.ninjafishstudios", "").gsub(".", " ").gsub("_", " ").titleize()
-        
-        
+         
+        if sale['name']
+          sale['name'] = sale['name'].gsub("com.ninjafishstudios", "").gsub(".", " ").gsub("_", " ").titleize()
+        end
       end
     end
     
@@ -422,21 +436,86 @@ module Appdigest
       sales.push(total)
     end
     
-    def search_inapps(keywords_csv, options)
+    def recent(options)
+      new_options = {}
+      options.each do |k,v|
+        new_options[k]=v
+      end
+      new_options['recent'] = true
+      
+      from = 7
+      if options[:days]
+        from = options[:days].to_i
+      elsif options[:week]
+        from = 7
+      elsif options[:month]
+        from = 30
+      elsif options[:year]
+        from = 365
+      end
+      
+      new_options[:from_date] = from.days.ago.in_time_zone(TIME_ZONE)
+      
+      keywords = "*"
+      if options[:keywords]
+        keywords = options[:keywords]
+      end
+      
+      if options[:type].nil?
+        new_options[:type] = "app"
+      end
+      
+      if options[:sort_by].nil?
+        new_options['sort_by'] = "revenue"
+      end
+      
+      return self.search(keywords, new_options)
+    end
+    
+    def search(keywords_csv, options)
       sort_by = "bayesian_ranked_revenue_per_download"
       if options['sort_by']
         sort_by = options['sort_by']
       end
       
-      sales = self.first_months_revenue("inapp", sort_by)
-#       sales = self.yesterdays_revenue("inapp", sort_by)
+      date_range = 30.days
+      if options[:days]
+        date_range = options[:days].to_i.days
+      elsif options[:week]
+        date_range = 7.days
+      elsif options[:month]
+        date_range = 30.days
+      elsif options[:year]
+        date_range = 365.days
+      end
+      
+      if options[:recent]
+        date_range = nil
+      end
+      
+      type = "inapp"
+      if options[:type]
+        type = options[:type]
+      end
+      
+#       from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
+      from_date = Appdigest::EARLIEST_POSSIBLE_APP_STORE_DATE
+      to_date = 1.days.ago.in_time_zone(TIME_ZONE)
+      
+      if options[:from_date]
+        from_date = options[:from_date]
+      end
+      
+      sales = self.revenue(from_date, to_date, type, sort_by, date_range)
+      
       keywords = keywords_csv.split(",")
       
       filtered_sales = []
       i = 0
       sales.each do |sale|
         keywords.each do |keyword|
-          if not sale['name'].downcase.index(keyword.downcase).nil?
+          
+          if (sale['name'] and not sale['name'].downcase.index(keyword.downcase).nil?) or keywords_csv == "*"
             i += 1
             sale['index'] = i
             filtered_sales.push(sale)

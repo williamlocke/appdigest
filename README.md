@@ -29,6 +29,18 @@ $ appdigest search_inapps characters,patients,babies
 ~~~
 
 
+Compare app performance firt week
+~~~ sh
+$ appdigest search * --type app --week
+~~~
+
+Compare in-app performance first week
+~~~ sh
+$ appdigest search * --type app --week
+~~~
+
+
+
 
 
 Contributing to appdigest
