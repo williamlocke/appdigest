@@ -14,8 +14,11 @@ $ sudo rake install
 ~~~
 
 Set environmental variables for appfigures:
+~~~ sh
 export APPFIGURES_USERNAME=user@example.com
 export APPFIGURES_PASSWORD=password
+~~~
+
 
 Usage
 -----
