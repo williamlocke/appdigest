@@ -23,6 +23,7 @@ module Appdigest
 	  method_option :week, :desc => "Shows data for first week of apps release"
 	  method_option :month, :desc => "Shows data for first month of apps release"
 	  method_option :year, :desc => "Shows data for first year of apps release"
+	  method_option :except, :desc => "CSV of keywords such that any in-app or app containing will be removed from data"
 	  def search(keywords_csv)
 	    appdigest = Appdigest.new options
 	    sales = appdigest.search(keywords_csv, options)
@@ -428,7 +429,10 @@ module Appdigest
 
       total['name'] = "Totals"
       total['revenue'] = total_revenue
+      
+      #total['downloads'] = total_downloads / sales.count()
       total['downloads'] = total_downloads
+      
       total['purchases'] = total_purchases
       total['revenue_per_download'] = total_revenue_per_download / sales.count()
       total['purchases_per_download'] = total_purchases_per_download / sales.count()
@@ -510,12 +514,38 @@ module Appdigest
       
       keywords = keywords_csv.split(",")
       
+      puts "keywords: %s" % keywords
+      
       filtered_sales = []
       i = 0
       sales.each do |sale|
         keywords.each do |keyword|
           
-          if (sale['name'] and not sale['name'].downcase.index(keyword.downcase).nil?) or keywords_csv == "*"
+          
+          keyword_match = false
+          if sale['name']
+            keyword_match = true
+            keyword.split("+").each do |keyword_fragment|
+              if sale['name'].downcase.index(keyword_fragment.downcase).nil?
+                keyword_match = false
+              end
+            end
+          end
+          
+          if keyword_match or keywords_csv == "*"
+            
+            if options[:except]
+              found = false
+              options[:except].split(",").each do |except_word|
+                if sale['name'].downcase.index(except_word.downcase)
+                  found = true
+                  break
+                end
+              end
+              if found
+                next
+              end
+            end
             i += 1
             sale['index'] = i
             filtered_sales.push(sale)
@@ -528,6 +558,36 @@ module Appdigest
       self.humanize(filtered_sales)
       return filtered_sales      
     end
+  
+    def rank_revenue_hash(options)
+      # traverse each app id, request rank history for given period. 
+      app_ids = []
+      
+      rank_revenue_hash = {}
+      app_ids.each do |app_id|
+        
+        revenue_history = @appfigures.sales(app_id, options)
+        rank_history = @appfigures.ranks(app_id, options)
+        
+        rank_history.each do |date, value|
+        
+          # Get a specific revenue value
+          revenue = revenue_history[date]
+          
+          # get rank as integer value
+          rank = value
+          
+          if not rank_revenue_hash[rank] 
+            rank_revenue_hash[rank] = []
+          end
+          
+          rank_revenue_hash[rank].push(revenue)
+          
+        end
+      end
+    
+    end
+  
   
   
   end
