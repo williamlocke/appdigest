@@ -124,6 +124,7 @@ module Appdigest
           if sale['product_type'] == "app"  
             if sales_data[sale.product_id].nil?
               sales_data[sale.product_id] = {}   
+              sales_data[sale.product_id]["ref_no"] = sale.ref_no     
               sales_data[sale.product_id]["revenue"] = 0.0     
               sales_data[sale.product_id]["downloads"] = 0
               sales_data[sale.product_id]["start_date"] = sale.date
@@ -164,6 +165,7 @@ module Appdigest
         sales_array.push(
           Hashie::Mash.new({
             'product_id'     =>  product_id,
+            'ref_no'     =>  data['ref_no'], # This is the identifier as it appears in app store
             'name'     =>  data['name'],
             'start_date'     =>  data['start_date'],
             'end_date'     =>  data['end_date'],
