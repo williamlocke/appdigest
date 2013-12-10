@@ -9,23 +9,27 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["williamlocke"]
-  s.date = "2013-09-04"
+  s.date = "2013-12-10"
   s.description = "Provides revenue statistics using appfigures API"
   s.email = "williamlocke@me.com"
   s.executables = ["appdigest"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
-    "README.rdoc"
+    "README.md",
+    "TODO"
   ]
   s.files = [
+    ".DS_Store",
     ".document",
     "Gemfile",
     "Gemfile.lock",
     "LICENSE.txt",
-    "README.rdoc",
+    "README.md",
     "Rakefile",
+    "TODO",
     "VERSION",
     "appdigest.gemspec",
+    "bin/appdigest",
     "lib/appdigest.rb",
     "test/helper.rb",
     "test/test_appdigest.rb"
@@ -40,20 +44,24 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<activesupport>, [">= 3.2.0"])
       s.add_runtime_dependency(%q<appfigures>, [">= 0"])
       s.add_runtime_dependency(%q<rails>, ["~> 3.2"])
       s.add_runtime_dependency(%q<thor>, [">= 0"])
       s.add_runtime_dependency(%q<table_print>, [">= 0"])
+      s.add_runtime_dependency(%q<atomic>, [">= 0"])
       s.add_development_dependency(%q<shoulda>, [">= 0"])
       s.add_development_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.8.7"])
       s.add_development_dependency(%q<simplecov>, [">= 0"])
     else
+      s.add_dependency(%q<activesupport>, [">= 3.2.0"])
       s.add_dependency(%q<appfigures>, [">= 0"])
       s.add_dependency(%q<rails>, ["~> 3.2"])
       s.add_dependency(%q<thor>, [">= 0"])
       s.add_dependency(%q<table_print>, [">= 0"])
+      s.add_dependency(%q<atomic>, [">= 0"])
       s.add_dependency(%q<shoulda>, [">= 0"])
       s.add_dependency(%q<rdoc>, ["~> 3.12"])
       s.add_dependency(%q<bundler>, ["~> 1.0"])
@@ -61,10 +69,12 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<simplecov>, [">= 0"])
     end
   else
+    s.add_dependency(%q<activesupport>, [">= 3.2.0"])
     s.add_dependency(%q<appfigures>, [">= 0"])
     s.add_dependency(%q<rails>, ["~> 3.2"])
     s.add_dependency(%q<thor>, [">= 0"])
     s.add_dependency(%q<table_print>, [">= 0"])
+    s.add_dependency(%q<atomic>, [">= 0"])
     s.add_dependency(%q<shoulda>, [">= 0"])
     s.add_dependency(%q<rdoc>, ["~> 3.12"])
     s.add_dependency(%q<bundler>, ["~> 1.0"])

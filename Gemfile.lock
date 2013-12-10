@@ -1,11 +1,7 @@
 PATH
   remote: ~/code/gems/appfigures
   specs:
-    appfigures (0.0.1)
-      faraday
-      faraday_middleware
-      hashie
-      multi_json
+    appfigures (0.0.2)
 
 GEM
   remote: http://rubygems.org/
@@ -44,8 +40,6 @@ GEM
     erubis (2.7.0)
     faraday (0.8.8)
       multipart-post (~> 1.2.0)
-    faraday_middleware (0.9.0)
-      faraday (>= 0.7.4, < 0.9)
     git (1.2.6)
     github_api (0.10.1)
       addressable
