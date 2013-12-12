@@ -20,4 +20,3 @@ group :development do
 #  gem "rcov", ">= 0"
   gem "simplecov", ">= 0"
 end
-
