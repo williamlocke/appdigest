@@ -48,6 +48,25 @@ module Appdigest
 	    puts "\n"
 	    tp sales, :index, {:name => {:width => 100}}, :downloads, :revenue, :revenue_per_download, :purchases_per_download
 	  end
+	  
+	  
+		desc "count", "Counts number of releases in a given period (defaults to week)"
+	  method_option :verbose, :aliases => "-v", :desc => "Be verbose"
+	  method_option :keywords, :desc => "Only show app or in-apps whose name contains one of given keywords (use a CSV e.g 'makeover,makeup'"
+	  method_option :username, :alias => "-u", :desc => "Your appfigures username"
+	  method_option :password, :alias => "-p", :desc => "Your appfigures password"
+	  method_option :type, :desc => "The type of data to return. E.g. --type inapp , --type app. (defaults to --type app)"
+	  method_option :days, :desc => "The first x days of apps release to return data for. E.g. --days 3 returns first 3 days"
+	  method_option :week, :desc => "Shows data for first week of apps release"
+	  method_option :month, :desc => "Shows data for first month of apps release"
+	  method_option :year, :desc => "Shows data for first year of apps release"
+	  def count()
+	    appdigest = Appdigest.new options
+	    sales = appdigest.count(options)
+	    puts "\n"
+	    tp sales, :index, {:name => {:width => 100}}, :downloads, :revenue, :revenue_per_download, :purchases_per_download
+	  end
+	  
 
 
   end
@@ -58,7 +77,7 @@ module Appdigest
     TIME_ZONE = "America/Los_Angeles"
     CACHE_PATH = File::SEPARATOR + ["tmp", "cache", "appdigest"].join(File::SEPARATOR)
     FILE_STORE = ActiveSupport::Cache::FileStore.new(CACHE_PATH)
-    EARLIEST_POSSIBLE_APP_STORE_DATE = Time.new(2008,1,1)
+    EARLIEST_POSSIBLE_APP_STORE_DATE = Time.new(2013,2,1)
     
     def initialize(options = {})
 	    if options[:username] and options[:password]
@@ -68,10 +87,8 @@ module Appdigest
 	    else
 	      puts "ERROR: appfigures username/password not provides (-u name@example.com -p password)"
 	    end
-    
 #       @appfigures = Appfigures.new( {:username => options[:username], :password => options[:password]})
     end
-    
     
    
     def self.bayesian_rank(array, rank_value_field, rank_count_field)
@@ -108,6 +125,9 @@ module Appdigest
     def sales_per_app(start_date, end_date, date_range = nil)
       url = "sales/dates+products/#{start_date.strftime('%Y-%m-%d')}/#{end_date.strftime('%Y-%m-%d')}"
       sales = FILE_STORE.read(url)
+      
+      puts url
+      
       if sales.nil?
         sales = @appfigures.date_sales(start_date, end_date)
         FILE_STORE.write(url, sales)
@@ -115,7 +135,6 @@ module Appdigest
       else
         puts "sales object pulled from cache for url: %s" % url
       end
-      
       
       sales_data = {}
       
@@ -442,13 +461,7 @@ module Appdigest
       sales.push(total)
     end
     
-    def recent(options)
-      new_options = {}
-      options.each do |k,v|
-        new_options[k]=v
-      end
-      new_options['recent'] = true
-      
+    def from_date_from_options(options)
       from = 7
       if options[:days]
         from = options[:days].to_i
@@ -460,7 +473,17 @@ module Appdigest
         from = 365
       end
       
-      new_options[:from_date] = from.days.ago.in_time_zone(TIME_ZONE)
+      return from.days.ago.in_time_zone(TIME_ZONE)
+    end
+    
+    def recent(options)
+      new_options = {}
+      options.each do |k,v|
+        new_options[k]=v
+      end
+      new_options['recent'] = true
+      
+      new_options[:from_date] = from_date_from_options(options)
       
       keywords = "*"
       if options[:keywords]
@@ -477,6 +500,38 @@ module Appdigest
       
       return self.search(keywords, new_options)
     end
+    
+    
+    def count(options)
+      sales = self.recent(options)
+      
+      from_date = self.from_date_from_options(options)
+      count = 0
+      apps_released = []
+      sales.each do |sale|
+        puts "sale start date: %s" % sale['start_date']
+#         sale_date = Date.strptime(sale['start_date'], "%Y-%m-%d")
+#         puts "sale date: %s" % sale_date
+        puts "from date: %s" % from_date.strftime("%Y-%m-%d")
+        if sale['start_date'].to_s != from_date.strftime("%Y-%m-%d").to_s
+          puts "date NOT same"
+          if not sale['name'].nil? and not sale['product_id'].nil? and sale['name'] != "Totals"
+            puts "product is game"
+            count = count + 1
+            apps_released.push(sale['name'])
+          end
+          puts sale
+        end
+                
+      end
+      
+      puts "Count: %d" % count
+      
+      
+      return apps_released
+    end
+    
+    
     
     def search(keywords_csv, options)
       sort_by = "bayesian_ranked_revenue_per_download"
@@ -507,6 +562,8 @@ module Appdigest
 #       from_date = 1000.days.ago.in_time_zone(TIME_ZONE)
       from_date = Appdigest::EARLIEST_POSSIBLE_APP_STORE_DATE
       to_date = 1.days.ago.in_time_zone(TIME_ZONE)
+      
+#       puts "Earliest date: %s" % from_date
       
       if options[:from_date]
         from_date = options[:from_date]
@@ -589,9 +646,6 @@ module Appdigest
       end
     
     end
-  
-  
-  
   end
   
 end
