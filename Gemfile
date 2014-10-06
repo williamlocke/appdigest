@@ -3,7 +3,7 @@ source "http://rubygems.org"
 # Example:
 #   gem "activesupport", ">= 2.3.5"
 
-#gem "activesupport", "= 3.2.16"
+#gem "activesupport"
 gem "activesupport"
 
 # gem "appfigures", :path => "~/code/gems/appfigures"
