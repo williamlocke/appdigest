@@ -4,6 +4,7 @@ Appdigest
 Purchase analytics using AppFigures API.
 
 
+
 Installation
 ------------
 
